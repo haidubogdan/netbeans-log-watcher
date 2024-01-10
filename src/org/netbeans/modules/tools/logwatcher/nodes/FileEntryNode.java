@@ -1,59 +1,53 @@
-package org.netbeans.modules.tools.logwatcher;
+package org.netbeans.modules.tools.logwatcher.nodes;
 
 import java.awt.BorderLayout;
+import java.awt.Image;
 import java.beans.IntrospectionException;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.Date;
 import javax.swing.Action;
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 import org.openide.actions.OpenAction;
 import org.openide.cookies.OpenCookie;
 import org.openide.filesystems.FileObject;
-import org.openide.nodes.BeanNode;
-import org.openide.nodes.FilterNode;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Children;
 import org.openide.util.Exceptions;
-import org.openide.util.Utilities;
+import org.openide.util.ImageUtilities;
 import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 
 /**
+ * on the list for removal
  *
  * @author bhaidu
  */
-public class FileEntryNode extends FilterNode {
+public class FileEntryNode extends AbstractNode {
 
     private final FileObject file;
 
     public FileEntryNode(FileObject entry) throws IntrospectionException {
-        super(new BeanNode<FileObject>(entry),
-                Children.LEAF,
+        super(Children.LEAF,
                 Lookups.fixed(new EntryOpenCookie(entry)));
         this.file = entry;
     }
 
-    /**
+    /** 
      * Using HtmlDisplayName ensures any HTML in RSS entry titles are properly
      * handled, escaped, entities resolved, etc.
      */
     @Override
     public String getHtmlDisplayName() {
-        return file.getName();
-    }
-
-    /**
-     * Making a tooltip out of the entry's description
-     */
-    @Override
-    public String getShortDescription() {
-        StringBuilder sb = new StringBuilder();
-//        sb.append("Author: ").append(file.getAuthor()).append("; ");
-//        if (file.getPublishedDate() != null) {
-//            sb.append("Published: ").append(file.getPublishedDate().toString());
-//        }
-        return sb.toString();
+        String name = file.getNameExt();
+        Date lastModified = file.lastModified();
+        
+        if (lastModified != null){
+            name += " <font color='AAAAAA'><i>" + lastModified.toString() + "</i></font>";
+        }
+        return name;
     }
 
     /**
@@ -61,13 +55,20 @@ public class FileEntryNode extends FilterNode {
      */
     @Override
     public Action[] getActions(boolean popup) {
-        List<? extends Action> rootActions = Utilities.actionsForPath("Actions/LogWatcher");
-        return rootActions.toArray(new Action[rootActions.size()]);
+        //return new Action[]{SystemAction.get(OpenAction.class)};
+        return new Action[0];
     }
 
+    /*
     @Override
     public Action getPreferredAction() {
         return getActions(false)[0];
+    }
+*/
+    
+    @Override
+    public Image getIcon(int type) {
+        return ImageUtilities.loadImage("org/netbeans/modules/tools/logwatcher/resources/file.png");
     }
 
     /**

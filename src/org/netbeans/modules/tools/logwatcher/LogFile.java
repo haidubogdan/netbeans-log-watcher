@@ -1,23 +1,25 @@
 package org.netbeans.modules.tools.logwatcher;
 
+import java.io.File;
+import java.io.Serializable;
 import org.openide.filesystems.FileObject;
-
+import org.openide.filesystems.FileUtil;
 
 /**
  *
  * @author bhaidu
  */
-public class LogFile {
-    
-    private static final long serialVersionUID = 1L;
-    
-    private final FileObject file;
-    
-    public LogFile(FileObject file) {
+public class LogFile implements Serializable {
+
+    private static final long serialVersionUID = 232325L;
+
+    private final File file;
+
+    public LogFile(File file) {
         this.file = file;
     }
-    
-    public FileObject getLogFile(){
+
+    public File getLogFile() {
         return file;
     }
 }

@@ -1,44 +1,30 @@
 package org.netbeans.modules.tools.logwatcher;
 
-import java.beans.IntrospectionException;
-import java.util.ArrayList;
+import org.netbeans.modules.tools.logwatcher.nodes.RootNode;
 import java.util.List;
-import org.openide.filesystems.FileObject;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
-import org.openide.util.Exceptions;
-import org.openide.util.NbCollections;
-import org.openide.nodes.ChildFactory;
-import org.openide.nodes.Node;
-import org.openide.util.NbCollections;
 
 /**
  *
  * @author bhaidu
  */
-public class LogFolderChildFactory extends ChildFactory<FileObject> {
+public class LogFolderChildFactory extends ChildFactory<RootNode> {
 
-    private final FileObject file;
+    private final RootNode rootNode;
 
-    public LogFolderChildFactory(FileObject file) {
-        this.file = file;
+    public LogFolderChildFactory(RootNode rootNode) {
+        this.rootNode = rootNode;
     }
 
     @Override
-    protected boolean createKeys(List<FileObject> list) {
-        list.add(file);
-        list.addAll(NbCollections.checkedListByCopy(new ArrayList<>(), FileObject.class, true));
+    protected boolean createKeys(List<RootNode> list) {
+        list.add(rootNode);
         return true;
     }
 
     @Override
-    protected Node createNodeForKey(FileObject file) {
-        FileEntryNode node = null;
-        try {
-            node = new FileEntryNode(file);
-        } catch (IntrospectionException ex) {
-            Exceptions.printStackTrace(ex);
-        }
+    protected Node createNodeForKey(RootNode node) {
         return node;
     }
 

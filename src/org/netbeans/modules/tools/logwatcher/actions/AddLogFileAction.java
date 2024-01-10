@@ -1,4 +1,4 @@
-package org.netbeans.modules.tools.logwatcher;
+package org.netbeans.modules.tools.logwatcher.actions;
 
 import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
@@ -6,88 +6,73 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import javax.swing.AbstractAction;
-import org.netbeans.modules.tools.logwatcher.Bundle;
+import org.netbeans.modules.tools.logwatcher.LogFile;
+import org.netbeans.modules.tools.logwatcher.WatchDir;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.filesystems.FileChangeAdapter;
-import org.openide.filesystems.FileChangeListener;
 import org.openide.filesystems.FileEvent;
 import org.openide.filesystems.FileLock;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataFolder;
 import org.openide.util.Exceptions;
-import org.openide.util.NbBundle.Messages;
-import org.openide.util.RequestProcessor;
 import org.openide.windows.WindowManager;
 
-@ActionID(category = "LogWatcher", id = "org.netbeans.modules.tools.logwatcher.AddLogFileAction")
-@ActionRegistration(displayName = "#FN_addbutton")
-@Messages("FN_addbutton=Add Log File")
-public class AddLogFileAction implements ActionListener {
 
-//    private final DataFolder folder;
-    private final FileChangeListener fileChangeListener = new FileChangeListenerImpl();
-//
-//    public AddLogFileAction(DataFolder df) {
-//        folder = df;
-//    }
+/**
+ * for a file we need to use a different service or filter a folder to notify for just 
+ * some files
+ * 
+ * @author bhaidu
+ */
+//@ActionID(category = "RootActions", id = "org.netbeans.modules.tools.logwatcher.actions.AddLogFileAction")
+//@ActionRegistration(displayName = "Add Log File")
+public class AddLogFileAction extends AbstractAction implements ActionListener {
 
-    @Messages({
-        "FN_askurl_msg=Enter the path of an Log File",
-        "FN_askurl_title=Add log file",
-        "FN_askurl_err=Invalid URL: {0}|",
-        "FN_cannotConnect_err=Cannot Connect!"
-    })
+    private final DataFolder folder;
+
+    public AddLogFileAction(DataFolder df) {
+        folder = df;
+    }
 
     @Override
     public void actionPerformed(ActionEvent ae) {
         FileDialog fileDialog = new FileDialog(WindowManager.getDefault().getMainWindow());
+        fileDialog.setTitle("Select a file");
         fileDialog.setVisible(true);
-        File[] files = new File[]{};
+
         if (fileDialog.getDirectory() != null && fileDialog.getFile() != null) {
             String selFilePath = fileDialog.getFile();
             File dir = new File(fileDialog.getDirectory());
             File selFile = new File(dir, selFilePath);
-            files = new File[]{};
-            //FileUtil.addRecursiveListener(fileChangeListener, dir);
-            LogOutputComponent tc = new LogOutputComponent();
-            FileChangeSupport fileSupportListener = new FileChangeSupport(tc);
-            FileUtil.addRecursiveListener(fileSupportListener, dir);
             FileObject fo = FileUtil.toFileObject(selFile);
-            fo.addFileChangeListener(FileUtil.weakFileChangeListener(fileSupportListener, dir));
 
             System.out.println("added listener for " + fo.getNameExt());
-            tc.setDisplayName("Logoutput component " + dir.getName());
-            tc.open();
-            tc.requestActive();
 
-            FileObject rootFolder = FileUtil.getConfigFile("LogFiles");
-            int ix = 1;
-            while (rootFolder.getFileObject("LogFiles" + ix, "ser") != null) {
-                ix++;
-            }
-
+            FileObject fld = folder.getPrimaryFile();
+            String baseName = fo.getNameExt();
             try {
-                FileObject writeTo = rootFolder.createData("LogFiles" + ix, "ser");
+                WatchDir.watch(selFile.toPath());
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+            try {
+                FileObject writeTo = fld.createData(baseName, "ser");
                 FileLock lock = writeTo.lock();
                 try {
                     ObjectOutputStream str = new ObjectOutputStream(writeTo.getOutputStream(lock));
                     try {
-                        str.writeObject(fo.getName());
+                        str.writeObject(new LogFile(selFile));
                     } finally {
                         str.close();
                     }
@@ -97,7 +82,6 @@ public class AddLogFileAction implements ActionListener {
             } catch (IOException ioe) {
                 Exceptions.printStackTrace(ioe);
             }
-
         }
     }
 
