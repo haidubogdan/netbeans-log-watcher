@@ -21,6 +21,8 @@ import org.openide.util.Exceptions;
  */
 public class LogNodeSupport {
 
+    public static String FOLDER_DATA_NAME = "dataDir";
+    
     public static LogFolder getLogFolder(FileObject dirFo) {
         FileObject[] list = dirFo.getChildren();
 
@@ -33,6 +35,16 @@ public class LogNodeSupport {
         }
 
         return null;
+    }
+    
+    public static FileObject getRealFileObject(FileObject dirFo) {
+        LogFolder lf = getLogFolder(dirFo);
+
+        if (lf == null){
+            return null;
+        }
+
+        return FileUtil.toFileObject(lf.dir);
     }
 
     public static LogFolder unserializeLogInfo(FileObject dirData) {

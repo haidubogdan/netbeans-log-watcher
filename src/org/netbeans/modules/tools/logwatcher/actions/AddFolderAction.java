@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 import org.netbeans.modules.tools.logwatcher.LogFolder;
+import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
 import org.netbeans.modules.tools.logwatcher.LogWatcherPropertiesSupport;
 import org.netbeans.modules.tools.logwatcher.WatchDir;
 import org.openide.awt.ActionID;
@@ -58,7 +59,7 @@ public class AddFolderAction extends AbstractAction implements ActionListener {
             try {
                 DataFolder fd = DataFolder.create(folder, folderString);
                 FileObject fod = fd.getPrimaryFile();
-                FileObject writeTo = fod.createData("dataDir" + folderString);
+                FileObject writeTo = fod.createData(LogNodeSupport.FOLDER_DATA_NAME + folderString);
                 FileLock lock = writeTo.lock();
                 try {
                     try (ObjectOutputStream str = new ObjectOutputStream(writeTo.getOutputStream(lock))) {

@@ -30,11 +30,9 @@ public class LogFolderChildren extends FilterNode.Children {
                 Exceptions.printStackTrace(ex);
             }
         } else {
-//            if (n.getName().startsWith("dataDir")){
-//                List<Node> filesNodes =  LogNodeSupport.getFileNodesForFolderData(fo);
-//                
-//                return filesNodes.toArray(new Node[filesNodes.size()]);
-//            }
+            if (!n.getName().startsWith("dataDir")){
+                return new Node[]{new LogFileNode(n)};
+            }
         }
 
         return new Node[]{};
