@@ -1,20 +1,14 @@
 package org.netbeans.modules.tools.logwatcher.actions;
 
-import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
-import org.netbeans.modules.tools.logwatcher.LogFolder;
-import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
-import org.netbeans.modules.tools.logwatcher.LogWatcherPropertiesSupport;
-import org.netbeans.modules.tools.logwatcher.WatchDir;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionRegistration;
-import org.openide.filesystems.FileLock;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataFolder;
@@ -59,6 +53,9 @@ public class AddFolderAction extends AbstractAction implements ActionListener {
             try {
                 DataFolder fd = DataFolder.create(folder, folderString);
                 FileObject fod = fd.getPrimaryFile();
+                fod.setAttribute(LOG_PATH_ATTR, dirFo.getPath());
+                
+                /*
                 FileObject writeTo = fod.createData(LogNodeSupport.FOLDER_DATA_NAME + folderString);
                 FileLock lock = writeTo.lock();
                 try {
@@ -69,9 +66,9 @@ public class AddFolderAction extends AbstractAction implements ActionListener {
                 } finally {
                     lock.releaseLock();
                 }
-
-                LogWatcherPropertiesSupport.getInstance().setFilePath(dir.getName(), dirFo);
-                WatchDir.watch(dir.toPath());
+                */
+                //LogWatcherPropertiesSupport.getInstance().setFilePath(dir.getName(), dirFo);
+                //WatchDir.watch(dir.toPath());
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }

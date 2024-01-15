@@ -5,6 +5,7 @@ import org.netbeans.modules.tools.logwatcher.actions.StopWatchAction;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Action;
+import org.netbeans.modules.tools.logwatcher.actions.AddLogFileAction;
 import org.openide.loaders.DataFolder;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.nodes.FilterNode;
@@ -27,6 +28,7 @@ public class RootNode extends FilterNode {
         List<Action> actions = new ArrayList<>();
         DataFolder fd = getLookup().lookup(DataFolder.class);
         actions.add(new AddFolderAction(fd));
+        actions.add(new AddLogFileAction(fd));
         actions.add(new StopWatchAction());
         return actions.toArray(new Action[actions.size()]);
     }

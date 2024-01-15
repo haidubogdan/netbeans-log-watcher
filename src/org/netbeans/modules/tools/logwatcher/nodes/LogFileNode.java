@@ -21,22 +21,18 @@ import org.openide.util.lookup.Lookups;
  */
 public class LogFileNode extends FilterNode {
 
-    public JCheckBox checkBox;
-
     public LogFileNode(Node logFileNode) {
         super(logFileNode, Children.LEAF);
-        checkBox = new JCheckBox();
-        checkBox.setOpaque(false);
     }
 
     @Override
     public String getDisplayName() {
-        return getLookup().lookup(FileObject.class).getName();
+        return getLookup().lookup(FileObject.class).getNameExt();
     }
 
     @Override
-    public Image getOpenedIcon(int type) {
-        return getIcon(type);
+    public Image getIcon(int type) {
+        return ImageUtilities.loadImage("org/netbeans/modules/tools/logwatcher/resources/file.png");
     }
 
     @Override
@@ -48,7 +44,7 @@ public class LogFileNode extends FilterNode {
         for (Action action : rootActions) {
             Object name = action.getValue(Action.NAME);
             switch ((String) name) {
-                case "Refresh":
+                case "Watch":
                 case "Delete":
                     actions.add(action);
                     break;
@@ -57,13 +53,4 @@ public class LogFileNode extends FilterNode {
         return actions.toArray(new Action[actions.size()]);
     }
 
-    @Override
-    public boolean hasCustomizer() {
-        return true;
-    }
-
-    @Override
-    public Component getCustomizer() {
-        return checkBox;
-    }
 }

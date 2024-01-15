@@ -22,6 +22,10 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_DIR_HAS_FILTERS_ATTR;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_FILE_WATCH_ATTR;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
+import org.openide.filesystems.FileObject;
 
 /**
  *
@@ -116,7 +120,20 @@ public class JCheckBoxTree extends JTree {
     private void addSubtreeToCheckingStateTracking(DefaultMutableTreeNode node) {
         TreeNode[] path = node.getPath();
         TreePath tp = new TreePath(path);
-        CheckedNode cn = new CheckedNode(false, node.getChildCount() > 0, false);
+        boolean checked = false;
+        if (node.isLeaf()) {
+            Object userObj = node.getUserObject();
+            if (userObj != null && userObj instanceof FileObject) {
+                //SHOULD USE A PROXY OBJ
+                FileObject fo = (FileObject) node.getUserObject();
+                Object test = fo.getAttribute(LOG_PATH_ATTR);
+                Integer checkedStatus = (Integer) fo.getAttribute(LOG_FILE_WATCH_ATTR);
+                if (checkedStatus != null && checkedStatus == 1) {
+                    checked = true;
+                }
+            }
+        }
+        CheckedNode cn = new CheckedNode(checked, node.getChildCount() > 0, false);
         nodesCheckingState.put(tp, cn);
         for (int i = 0; i < node.getChildCount(); i++) {
             addSubtreeToCheckingStateTracking((DefaultMutableTreeNode) tp.pathByAddingChild(node.getChildAt(i)).getLastPathComponent());
@@ -150,7 +167,14 @@ public class JCheckBoxTree extends JTree {
                 return this;
             }
             checkBox.setSelected(cn.isSelected);
-            checkBox.setText(obj.toString());
+            if (obj instanceof FileObject){
+                checkBox.setText(((FileObject) obj).getNameExt());
+            } else if (obj != null) {
+                checkBox.setText(obj.toString());
+            } else {
+                checkBox.setText("n-a");
+            }
+            
             checkBox.setOpaque(cn.isSelected && cn.hasChildren && !cn.allChildrenSelected);
             return this;
         }

@@ -6,9 +6,9 @@ package org.netbeans.modules.tools.logwatcher.actions;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import javax.swing.AbstractAction;
-import org.netbeans.modules.tools.logwatcher.LogFolder;
 import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
 import static javax.swing.Action.NAME;
 import org.openide.awt.ActionID;
@@ -21,7 +21,7 @@ import org.openide.util.Exceptions;
  *
  * @author bogdan
  */
-@ActionID(id = "org.netbeans.modules.tools.logwatcher.actions.AddFolderAction", category = "RootActions")
+@ActionID(id = "org.netbeans.modules.tools.logwatcher.actions.OpenInSystemAction", category = "RootActions")
 @ActionRegistration(displayName = "Open in System")
 public class OpenInSystemAction extends AbstractAction implements ActionListener {
 
@@ -35,11 +35,12 @@ public class OpenInSystemAction extends AbstractAction implements ActionListener
     @Override
     public void actionPerformed(ActionEvent e) {
         FileObject primaryFile = folder.getPrimaryFile();
-        LogFolder lf = LogNodeSupport.getLogFolder(primaryFile);
-        if (lf != null && lf.dir != null) {
+        File logFile = LogNodeSupport.getFileFromLogPathAttr(primaryFile);
+        
+        if (logFile != null) {
             Desktop desktop = Desktop.getDesktop();
             try {
-                desktop.open(lf.dir);
+                desktop.open(logFile);
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }

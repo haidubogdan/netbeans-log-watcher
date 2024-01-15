@@ -5,9 +5,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.AbstractAction;
-import org.netbeans.modules.tools.logwatcher.LogFolder;
 import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
-import org.netbeans.modules.tools.logwatcher.LogWatcherPropertiesSupport;
 import org.netbeans.modules.tools.logwatcher.WatchDir;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionRegistration;
@@ -32,12 +30,12 @@ public class DeleteFolderAction extends AbstractAction implements ActionListener
     @Override
     public void actionPerformed(ActionEvent ae) {
         FileObject primaryFile = folder.getPrimaryFile();
-        LogFolder lf = LogNodeSupport.getLogFolder(primaryFile);
+        File logFile = LogNodeSupport.getFileFromLogPathAttr(primaryFile);
 
-        if (lf != null && lf.dir != null) {
+        if (logFile != null && logFile.isDirectory() ) {
             WatchDir watchDir = WatchDir.getInstance();
             if (watchDir != null) {
-                watchDir.remove(lf.dir.toPath());
+                watchDir.remove(logFile.toPath());
             }
         }
         try {

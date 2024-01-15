@@ -23,14 +23,14 @@ import org.openide.windows.IOContainer;
  */
 public class WatchDir implements ChangeListener {
 
-    private static final RequestProcessor WORKER = new RequestProcessor(WatchDir.class.getName(), 1, true);
+    private static RequestProcessor WORKER = new RequestProcessor(WatchDir.class.getName(), 1, true);
     private final WatchService watcher;
     private final Map<WatchKey, Path> keys;
     //private final boolean recursive;
     private boolean trace = false;
     public AtomicBoolean isRunning = new AtomicBoolean(false);
     private static WatchDir instance = null;
-    ProgressHandle ph;
+    //ProgressHandle ph;
     private final LogIO output;
 
     public static WatchDir watch(Path path) throws IOException {
@@ -159,14 +159,16 @@ public class WatchDir implements ChangeListener {
     public synchronized void killProcess() {
         System.out.println("Process stopped");
         this.isRunning.set(false);
-        if (ph != null) {
-            ph.finish();
-            ph.close();
-            ph = null;
-        }
+//        if (ph != null) {
+//            ph.finish();
+//            ph.close();
+//            ph = null;
+//        }
         if (!WORKER.isShutdown()) {
             WORKER.stop();
             WORKER.shutdown();
+            //reset
+            WORKER = new RequestProcessor(WatchDir.class.getName(), 1, true);
         }
     }
 

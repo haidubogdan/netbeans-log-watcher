@@ -12,11 +12,9 @@ import javax.swing.JScrollPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
-import org.netbeans.modules.tools.logwatcher.LogFolder;
 import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
 import org.netbeans.modules.tools.logwatcher.ui.JCheckBoxTree;
 import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataFolder;
 
 /**
@@ -34,15 +32,11 @@ public class FilterFilesListAction extends AbstractAction implements ActionListe
 
     @Override
     public void actionPerformed(ActionEvent ae) {
-        FileObject primaryFile = folder.getPrimaryFile();
-        LogFolder lf = LogNodeSupport.getLogFolder(primaryFile);
+        FileObject root = folder.getPrimaryFile();
+        FileObject logFo = LogNodeSupport.fromLogPathAttr(root);
 
-        if (lf != null && lf.dir != null) {
-            FileObject dirFo = FileUtil.toFileObject(lf.dir);
-            if (!dirFo.isFolder()){
-                return;
-            }
-            StandardDialog dialog = new StandardDialog("Filter files", dirFo);
+        if (logFo != null && logFo.isFolder()) {
+            StandardDialog dialog = new StandardDialog("Filtered  files (not working)", root, logFo);
             dialog.setVisible(true);
         }
 
@@ -51,18 +45,19 @@ public class FilterFilesListAction extends AbstractAction implements ActionListe
     private static final class StandardDialog extends JDialog {
 
         public StandardDialog(
-                String title, FileObject dirFo
+                String title, FileObject root, FileObject dirFo
         ) {
             super((Frame) null, title, true);
 
             getContentPane().setLayout(new BorderLayout());
             final JCheckBoxTree cbt = new JCheckBoxTree();
-            DefaultMutableTreeNode root = new DefaultMutableTreeNode("Files");
-            for (FileObject fo : dirFo.getChildren()){
-                DefaultMutableTreeNode fileName = new DefaultMutableTreeNode(fo.getNameExt()); 
-                root.add(fileName);
+            DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("Files");
+            for (FileObject fo : root.getChildren()){
+                DefaultMutableTreeNode fileName = new DefaultMutableTreeNode(fo.getNameExt());
+                fileName.setUserObject(fo);
+                rootNode.add(fileName);
             }
-            DefaultTreeModel model = new DefaultTreeModel(root);
+            DefaultTreeModel model = new DefaultTreeModel(rootNode);
             cbt.setModel(model);
             cbt.addCheckChangeEventListener(new JCheckBoxTree.CheckChangeEventListener() {
                 public void checkStateChanged(JCheckBoxTree.CheckChangeEvent event) {

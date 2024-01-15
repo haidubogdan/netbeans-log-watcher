@@ -4,8 +4,7 @@ import org.netbeans.modules.tools.logwatcher.actions.FilterFilesListAction;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Action;
-import org.netbeans.modules.tools.logwatcher.LogFolder;
-import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataFolder;
 import org.openide.loaders.DataObjectNotFoundException;
@@ -20,19 +19,19 @@ import org.openide.util.Utilities;
 public class FolderNode extends FilterNode {
 
     private final FileObject nodeFo;
-    private final LogFolder logFolder;
+    private final String logPath;
     
     public FolderNode(Node filterNode, FileObject nodeFo) throws DataObjectNotFoundException {
         super(filterNode, new LogFolderChildren(filterNode));
         this.nodeFo = nodeFo;
-        logFolder = LogNodeSupport.getLogFolder(nodeFo);
+        this.logPath = (String) nodeFo.getAttribute(LOG_PATH_ATTR);
     }
 
     @Override
     public String getHtmlDisplayName(){
         String name = nodeFo.getName();
-        if (logFolder != null && logFolder.dir != null){
-            name += " <font color='AAAAAA'><i>" + logFolder.dir.getPath() + "</i></font>";
+        if (logPath != null ){
+            name += " <font color='AAAAAA'><i>" + logPath + "</i></font>";
         }
         return name;
     }

@@ -3,17 +3,10 @@ Licensed to the Apache Software Foundation (ASF)
  */
 package org.netbeans.modules.tools.logwatcher;
 
-import java.beans.IntrospectionException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import org.netbeans.modules.tools.logwatcher.nodes.FileEntryNode;
+import java.io.File;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
-import org.openide.nodes.Node;
-import org.openide.util.Exceptions;
 
 /**
  *
@@ -21,69 +14,23 @@ import org.openide.util.Exceptions;
  */
 public class LogNodeSupport {
 
-    public static String FOLDER_DATA_NAME = "dataDir";
-    
-    public static LogFolder getLogFolder(FileObject dirFo) {
-        FileObject[] list = dirFo.getChildren();
-
-        if (list.length > 0) {
-            FileObject dataDir = list[0];
-            LogFolder lf = unserializeLogInfo(dataDir);
-            if (lf != null) {
-                return lf;
-            }
-        }
-
-        return null;
-    }
-    
-    public static FileObject getRealFileObject(FileObject dirFo) {
-        LogFolder lf = getLogFolder(dirFo);
-
-        if (lf == null){
-            return null;
-        }
-
-        return FileUtil.toFileObject(lf.dir);
+    public static String getLogPath(FileObject fo) {
+        return (String) fo.getAttribute(LOG_PATH_ATTR);
     }
 
-    public static LogFolder unserializeLogInfo(FileObject dirData) {
-        try {
-            try (ObjectInputStream in = new ObjectInputStream(dirData.getInputStream())) {
-                try {
-                    Object decoded = in.readObject();
-                    if (decoded instanceof LogFolder) {
-                        return (LogFolder) decoded;
-                    }
-                } catch (ClassNotFoundException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-                in.close();
-            }
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+    public static FileObject fromLogPathAttr(FileObject fo) {
+        String path = getLogPath(fo);
+        if (path != null) {
+            return FileUtil.toFileObject(new File(path));
         }
         return null;
     }
 
-    public static List<Node> getFileNodesForFolderData(FileObject dirData) {
-        List<Node> files = new ArrayList<>();
-        LogFolder lf = unserializeLogInfo(dirData);
-        if (lf != null && lf.dir != null) {
-            if (!lf.dir.isDirectory()) {
-                return files;
-            }
-            FileObject dirfo = FileUtil.toFileObject(lf.dir);
-            if (dirfo.isFolder()) {
-                for (FileObject fo : dirfo.getChildren()) {
-                    try {
-                        files.add(new FileEntryNode(fo));
-                    } catch (IntrospectionException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                }
-            }
+    public static File getFileFromLogPathAttr(FileObject fo) {
+        String path = getLogPath(fo);
+        if (path != null) {
+            return new File(path);
         }
-        return files;
+        return null;
     }
 }
