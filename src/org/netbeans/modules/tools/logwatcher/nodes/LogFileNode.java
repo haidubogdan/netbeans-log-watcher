@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Action;
 import javax.swing.JCheckBox;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_DIR_HAS_FILTERS_ATTR;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_FILE_WATCH_ATTR;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
 import org.openide.actions.DeleteAction;
 import org.openide.filesystems.FileObject;
 import org.openide.nodes.FilterNode;
@@ -31,7 +34,23 @@ public class LogFileNode extends FilterNode {
     }
 
     @Override
+    public String getHtmlDisplayName() {
+        FileObject shadowFile = getLookup().lookup(FileObject.class);
+        String name = shadowFile.getNameExt();
+        FileObject parent = shadowFile.getParent();
+
+        Integer checkedStatus = (Integer) shadowFile.getAttribute(LOG_FILE_WATCH_ATTR);
+        if (parent.getAttribute(LOG_DIR_HAS_FILTERS_ATTR) != null
+                && (checkedStatus == null || checkedStatus == 0)) {
+            name += " <font color='AAAAAA'><i>(skipped from watch)</i></font>";
+        }
+
+        return name;
+    }
+
+    @Override
     public Image getIcon(int type) {
+
         return ImageUtilities.loadImage("org/netbeans/modules/tools/logwatcher/resources/file.png");
     }
 

@@ -1,6 +1,7 @@
 package org.netbeans.modules.tools.logwatcher.nodes;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.swing.Action;
 import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
@@ -30,12 +31,16 @@ public class LogFolderChildren extends FilterNode.Children {
                 Exceptions.printStackTrace(ex);
             }
         } else {
-            if (!n.getName().startsWith("dataDir")){
-                return new Node[]{new LogFileNode(n)};
-            }
+            return new Node[]{new LogFileNode(n)};
         }
 
         return new Node[]{};
     }
 
+    public void refreshNodes() {
+        Node[] nodes = original.getChildren().getNodes();
+        List<Node> empty = Collections.emptyList();
+        setKeys(empty);
+        setKeys(nodes);
+    }
 }

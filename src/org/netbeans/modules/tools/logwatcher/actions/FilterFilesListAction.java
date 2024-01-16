@@ -6,16 +6,24 @@ import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.Map.Entry;
 import javax.swing.AbstractAction;
+import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_DIR_HAS_FILTERS_ATTR;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_FILE_WATCH_ATTR;
 import org.netbeans.modules.tools.logwatcher.ui.JCheckBoxTree;
+import org.netbeans.modules.tools.logwatcher.ui.JCheckBoxTree.CheckedNode;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataFolder;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -24,6 +32,7 @@ import org.openide.loaders.DataFolder;
 public class FilterFilesListAction extends AbstractAction implements ActionListener {
 
     private final DataFolder folder;
+    StandardDialog dialog;
 
     public FilterFilesListAction(DataFolder df) {
         putValue(NAME, "Filter Files");
@@ -36,7 +45,7 @@ public class FilterFilesListAction extends AbstractAction implements ActionListe
         FileObject logFo = LogNodeSupport.fromLogPathAttr(root);
 
         if (logFo != null && logFo.isFolder()) {
-            StandardDialog dialog = new StandardDialog("Filtered  files (not working)", root, logFo);
+            dialog = new StandardDialog("Filtered  files", root, logFo);
             dialog.setVisible(true);
         }
 
@@ -52,28 +61,54 @@ public class FilterFilesListAction extends AbstractAction implements ActionListe
             getContentPane().setLayout(new BorderLayout());
             final JCheckBoxTree cbt = new JCheckBoxTree();
             DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("Files");
-            for (FileObject fo : root.getChildren()){
+            for (FileObject fo : root.getChildren()) {
                 DefaultMutableTreeNode fileName = new DefaultMutableTreeNode(fo.getNameExt());
                 fileName.setUserObject(fo);
                 rootNode.add(fileName);
             }
+
             DefaultTreeModel model = new DefaultTreeModel(rootNode);
             cbt.setModel(model);
-            cbt.addCheckChangeEventListener(new JCheckBoxTree.CheckChangeEventListener() {
-                public void checkStateChanged(JCheckBoxTree.CheckChangeEvent event) {
-                    System.out.println("event");
-                    TreePath[] paths = cbt.getCheckedPaths();
-                    for (TreePath tp : paths) {
-                        for (Object pathPart : tp.getPath()) {
-                            System.out.print(pathPart + ",");
-                        }
-                        System.out.println();
-                    }
-                }
-            });
+
             JScrollPane scroll = new JScrollPane(cbt);
             //scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
             add(scroll, BorderLayout.CENTER);
+            JPanel panel = new JPanel();
+            JButton b = new JButton("Update Filter");
+
+            JDialog self = this;
+
+            b.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    for (Entry<TreePath, CheckedNode> item : cbt.getPaths().entrySet()) {
+                        for (Object kp : item.getKey().getPath()) {
+                            if (kp instanceof DefaultMutableTreeNode) {
+                                Object uo = (((DefaultMutableTreeNode) kp).getUserObject());
+                                if (uo instanceof FileObject) {
+                                    try {
+                                        int sel = item.getValue().isSelected ? 1 : 0;
+                                        FileObject logFile = (FileObject) uo;
+                                        logFile.setAttribute(LOG_FILE_WATCH_ATTR, sel);
+                                        FileObject dirParent = logFile.getParent();
+                                        if (dirParent.getAttribute(LOG_DIR_HAS_FILTERS_ATTR) == null) {
+                                            dirParent.setAttribute(LOG_DIR_HAS_FILTERS_ATTR, 1);
+                                        }
+                                        dirParent.setAttribute("c_modified", System.currentTimeMillis());
+                                    } catch (IOException ex) {
+                                        Exceptions.printStackTrace(ex);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    self.dispose();
+                }
+            });
+            panel.add(b);
+            add(panel, BorderLayout.SOUTH);
             this.setSize(300, 400);
             final Toolkit toolkit = Toolkit.getDefaultToolkit();
             final Dimension screenSize = toolkit.getScreenSize();
@@ -81,5 +116,10 @@ public class FilterFilesListAction extends AbstractAction implements ActionListe
             final int y = (screenSize.height - this.getHeight()) / 2;
             this.setLocation(x, y);
         }
+
+        public void uodateComponent() {
+
+        }
     }
+
 }

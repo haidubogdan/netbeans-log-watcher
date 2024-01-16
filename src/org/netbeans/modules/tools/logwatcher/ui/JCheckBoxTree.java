@@ -32,16 +32,16 @@ import org.openide.filesystems.FileObject;
  * @author bogdan
  */
 public class JCheckBoxTree extends JTree {
-
+    public static String ID = "log_files_tree";
     private static final long serialVersionUID = -4194122328392241790L;
 
     JCheckBoxTree selfPointer = this;
 
     // Defining data structure that will enable to fast check-indicate the state of each node
     // It totally replaces the "selection" mechanism of the JTree
-    private class CheckedNode {
+    public class CheckedNode {
 
-        boolean isSelected;
+        public boolean isSelected;
         boolean hasChildren;
         boolean allChildrenSelected;
 
@@ -64,6 +64,10 @@ public class JCheckBoxTree extends JTree {
         public CheckChangeEvent(Object source) {
             super(source);
         }
+    }
+
+    public HashMap<TreePath, CheckedNode> getPaths(){
+        return nodesCheckingState;
     }
 
     public interface CheckChangeEventListener extends EventListener {
@@ -126,7 +130,6 @@ public class JCheckBoxTree extends JTree {
             if (userObj != null && userObj instanceof FileObject) {
                 //SHOULD USE A PROXY OBJ
                 FileObject fo = (FileObject) node.getUserObject();
-                Object test = fo.getAttribute(LOG_PATH_ATTR);
                 Integer checkedStatus = (Integer) fo.getAttribute(LOG_FILE_WATCH_ATTR);
                 if (checkedStatus != null && checkedStatus == 1) {
                     checked = true;

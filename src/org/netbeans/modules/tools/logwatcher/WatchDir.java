@@ -1,18 +1,22 @@
 package org.netbeans.modules.tools.logwatcher;
 
 import org.netbeans.modules.tools.logwatcher.output.LogIO;
-import java.awt.Component;
 import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.*;
-import static java.nio.file.LinkOption.*;
 import java.nio.file.attribute.*;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.netbeans.api.progress.*;
+import org.netbeans.api.progress.ProgressHandle;
+
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_DIR_HAS_FILTERS_ATTR;
+import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_FILE_WATCH_ATTR;
+import org.openide.filesystems.FileObject;
+import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Cancellable;
+import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import org.openide.windows.IOContainer;
 
@@ -159,11 +163,7 @@ public class WatchDir implements ChangeListener {
     public synchronized void killProcess() {
         System.out.println("Process stopped");
         this.isRunning.set(false);
-//        if (ph != null) {
-//            ph.finish();
-//            ph.close();
-//            ph = null;
-//        }
+
         if (!WORKER.isShutdown()) {
             WORKER.stop();
             WORKER.shutdown();
@@ -223,7 +223,30 @@ public class WatchDir implements ChangeListener {
 
                 // print out event
                 System.out.format("%s: %s\n", event.kind().name(), child);
-                this.output.notify(child, dir, event.kind().name());
+                String fileName = child.getFileName().toString();
+                if (fileName.endsWith(".log") || fileName.endsWith(".txt")){
+                    try {
+                        FileObject rootConfig = LogWatchTree.getRootFileObject();
+                        FileObject subFolder = rootConfig.getFileObject(dir.getFileName().toString());
+                        Object filterAttr = subFolder.getAttribute(LOG_DIR_HAS_FILTERS_ATTR);
+                        if (filterAttr != null && (Integer) filterAttr == 1){
+                            FileObject fileSearch = subFolder.getFileObject(fileName);
+                            if (fileSearch != null){
+                                Object watch = fileSearch.getAttribute(LOG_FILE_WATCH_ATTR);
+                                if (watch != null && (Integer) watch == 1){
+                                    this.output.notify(child, dir, event.kind().name());
+                                }
+                            } else {
+                                //new file
+                                this.output.notify(child, dir, event.kind().name());
+                            }
+                        } else {
+                            this.output.notify(child, dir, event.kind().name());
+                        }
+                    } catch (DataObjectNotFoundException ex) {
+                        Exceptions.printStackTrace(ex);
+                    }
+                }
                 // if directory is created, and watching recursively, then
                 // register it and its sub-directories
                 /*
