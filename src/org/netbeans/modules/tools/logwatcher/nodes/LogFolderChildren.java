@@ -1,5 +1,6 @@
 package org.netbeans.modules.tools.logwatcher.nodes;
 
+import java.awt.Image;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

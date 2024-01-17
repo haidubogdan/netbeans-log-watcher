@@ -43,6 +43,7 @@ public class RootNode extends FilterNode {
 
             @Override
             public void fileFolderCreated(FileEvent fe) {
+                refreshChildren();
             }
 
             @Override
@@ -71,7 +72,7 @@ public class RootNode extends FilterNode {
         DataFolder fd = getLookup().lookup(DataFolder.class);
         actions.add(new AddFolderAction(fd));
         actions.add(new AddLogFileAction(fd));
-        actions.add(new StopWatchAction());
+        actions.add(new StopWatchAction(fd));
         return actions.toArray(new Action[actions.size()]);
     }
 

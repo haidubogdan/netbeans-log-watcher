@@ -35,6 +35,7 @@ public class WatchAction extends AbstractAction implements ActionListener {
         if (logFile != null && logFile.isDirectory()) {
             try {
                 WatchDir.watch(logFile.toPath());
+                primaryFile.setAttribute("c_modified", System.currentTimeMillis());
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }
