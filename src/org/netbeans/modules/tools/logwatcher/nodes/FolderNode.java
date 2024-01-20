@@ -41,7 +41,7 @@ public class FolderNode extends FilterNode {
     }
     
     private Image badge(Image retValue) {
-        if (WatchDir.getInstance().isProcessRunning()){
+        if (WatchDir.getInstance() != null && WatchDir.getInstance().isProcessRunning()){
             Image ann = ImageUtilities.loadImage("org/netbeans/modules/tools/logwatcher/resources/watching.png"); //NOI18N
             retValue = ImageUtilities.mergeImages(retValue, ann, -1, 7);//NOI18N
         }
