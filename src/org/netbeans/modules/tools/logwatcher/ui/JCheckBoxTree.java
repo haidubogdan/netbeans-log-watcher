@@ -22,9 +22,7 @@ import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_DIR_HAS_FILTERS_ATTR;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_FILE_WATCH_ATTR;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
+import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 import org.openide.filesystems.FileObject;
 
 /**
@@ -32,6 +30,7 @@ import org.openide.filesystems.FileObject;
  * @author bogdan
  */
 public class JCheckBoxTree extends JTree {
+
     public static String ID = "log_files_tree";
     private static final long serialVersionUID = -4194122328392241790L;
 
@@ -52,10 +51,10 @@ public class JCheckBoxTree extends JTree {
         }
     }
     HashMap<TreePath, CheckedNode> nodesCheckingState;
-    HashSet<TreePath> checkedPaths = new HashSet<TreePath>();
+    HashSet<TreePath> checkedPaths = new HashSet<>();
 
     // Defining a new event type for the checking mechanism and preparing event-handling mechanism
-    protected EventListenerList listenerList = new EventListenerList();
+    protected EventListenerList listenerLists = new EventListenerList();
 
     public class CheckChangeEvent extends EventObject {
 
@@ -66,7 +65,7 @@ public class JCheckBoxTree extends JTree {
         }
     }
 
-    public HashMap<TreePath, CheckedNode> getPaths(){
+    public HashMap<TreePath, CheckedNode> getPaths() {
         return nodesCheckingState;
     }
 
@@ -76,15 +75,15 @@ public class JCheckBoxTree extends JTree {
     }
 
     public void addCheckChangeEventListener(CheckChangeEventListener listener) {
-        listenerList.add(CheckChangeEventListener.class, listener);
+        listenerLists.add(CheckChangeEventListener.class, listener);
     }
 
     public void removeCheckChangeEventListener(CheckChangeEventListener listener) {
-        listenerList.remove(CheckChangeEventListener.class, listener);
+        listenerLists.remove(CheckChangeEventListener.class, listener);
     }
 
     void fireCheckChangeEvent(CheckChangeEvent evt) {
-        Object[] listeners = listenerList.getListenerList();
+        Object[] listeners = listenerLists.getListenerList();
         for (int i = 0; i < listeners.length; i++) {
             if (listeners[i] == CheckChangeEventListener.class) {
                 ((CheckChangeEventListener) listeners[i + 1]).checkStateChanged(evt);
@@ -101,7 +100,7 @@ public class JCheckBoxTree extends JTree {
 
     // New method that returns only the checked paths (totally ignores original "selection" mechanism)
     public TreePath[] getCheckedPaths() {
-        return checkedPaths.toArray(new TreePath[checkedPaths.size()]);
+        return checkedPaths.toArray(new TreePath[0]);
     }
 
     // Returns true in case that the node is selected, has children but not all of them are selected
@@ -111,8 +110,8 @@ public class JCheckBoxTree extends JTree {
     }
 
     private void resetCheckingState() {
-        nodesCheckingState = new HashMap<TreePath, CheckedNode>();
-        checkedPaths = new HashSet<TreePath>();
+        nodesCheckingState = new HashMap<>();
+        checkedPaths = new HashSet<>();
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) getModel().getRoot();
         if (node == null) {
             return;
@@ -130,8 +129,7 @@ public class JCheckBoxTree extends JTree {
             if (userObj != null && userObj instanceof FileObject) {
                 //SHOULD USE A PROXY OBJ
                 FileObject fo = (FileObject) node.getUserObject();
-                Integer checkedStatus = (Integer) fo.getAttribute(LOG_FILE_WATCH_ATTR);
-                if (checkedStatus != null && checkedStatus == 1) {
+                if (ConfigSupport.fileIsMarkedForWatching(fo)) {
                     checked = true;
                 }
             }
@@ -170,14 +168,14 @@ public class JCheckBoxTree extends JTree {
                 return this;
             }
             checkBox.setSelected(cn.isSelected);
-            if (obj instanceof FileObject){
+            if (obj instanceof FileObject) {
                 checkBox.setText(((FileObject) obj).getNameExt());
             } else if (obj != null) {
                 checkBox.setText(obj.toString());
             } else {
                 checkBox.setText("n-a");
             }
-            
+
             checkBox.setOpaque(cn.isSelected && cn.hasChildren && !cn.allChildrenSelected);
             return this;
         }
@@ -188,28 +186,33 @@ public class JCheckBoxTree extends JTree {
         // Disabling toggling by double-click
         this.setToggleClickCount(0);
         // Overriding cell renderer by new one defined above
-        CheckBoxCellRenderer cellRenderer = new CheckBoxCellRenderer();
-        this.setCellRenderer(cellRenderer);
+        CheckBoxCellRenderer cellRenderers = new CheckBoxCellRenderer();
+        this.setCellRenderer(cellRenderers);
 
         // Overriding selection model by an empty one
         DefaultTreeSelectionModel dtsm = new DefaultTreeSelectionModel() {
             private static final long serialVersionUID = -8190634240451667286L;
 
             // Totally disabling the selection mechanism
+            @Override
             public void setSelectionPath(TreePath path) {
             }
 
+            @Override
             public void addSelectionPath(TreePath path) {
             }
 
+            @Override
             public void removeSelectionPath(TreePath path) {
             }
 
+            @Override
             public void setSelectionPaths(TreePath[] pPaths) {
             }
         };
         // Calling checking mechanism on mouse click
         this.addMouseListener(new MouseListener() {
+            @Override
             public void mouseClicked(MouseEvent arg0) {
                 TreePath tp = selfPointer.getPathForLocation(arg0.getX(), arg0.getY());
                 if (tp == null) {
@@ -224,15 +227,19 @@ public class JCheckBoxTree extends JTree {
                 selfPointer.repaint();
             }
 
+            @Override
             public void mouseEntered(MouseEvent arg0) {
             }
 
+            @Override
             public void mouseExited(MouseEvent arg0) {
             }
 
+            @Override
             public void mousePressed(MouseEvent arg0) {
             }
 
+            @Override
             public void mouseReleased(MouseEvent arg0) {
             }
         });

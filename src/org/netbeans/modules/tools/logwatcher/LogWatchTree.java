@@ -6,6 +6,7 @@ import org.openide.loaders.DataFolder;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.nodes.Node;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -26,4 +27,12 @@ public class LogWatchTree {
         return getRootDob().getPrimaryFile();
     }
 
+    public static FileObject getFolderFileObject(String folderName){
+        try {
+            return getRootFileObject().getFileObject(folderName);
+        } catch (DataObjectNotFoundException ex) {
+            //Exceptions.printStackTrace(ex);
+        }
+        return null;
+    }
 }

@@ -19,21 +19,23 @@
 package org.netbeans.modules.tools.logwatcher.nodes;
 
 import java.awt.Image;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.Action;
-import org.netbeans.modules.tools.logwatcher.ConfigSupport;
-import org.netbeans.modules.tools.logwatcher.actions.OpenInSystemAction;
 import org.openide.filesystems.FileObject;
 import org.openide.nodes.FilterNode;
 import org.openide.nodes.Node;
 import org.openide.util.ImageUtilities;
+import org.openide.util.Utilities;
+import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 
 /**
  *
- * @author bhaidu
+ * @author bogdan
  */
-public class LogFileNode extends FilterNode {
+public class BrokenNode extends FilterNode {
 
-    public LogFileNode(Node logFileNode) {
+    public BrokenNode(Node logFileNode) {
         super(logFileNode, Children.LEAF);
     }
 
@@ -41,33 +43,26 @@ public class LogFileNode extends FilterNode {
     public String getDisplayName() {
         return getLookup().lookup(FileObject.class).getNameExt();
     }
-
+    
     @Override
-    public String getHtmlDisplayName() {
-        FileObject nodeFo = getLookup().lookup(FileObject.class);
-        String name = nodeFo.getNameExt();
-
-        if (isFilteredOutFromWatch(nodeFo)) {
-            name += " <font color='AAAAAA'><i>(skipped from watch)</i></font>";
+    public String getShortDescription(){
+        FileObject file = getLookup().lookup(FileObject.class);
+        String logPath = ConfigSupport.getLogFileReferencePath(file);
+        if (logPath == null){
+            logPath = file.getName();
         }
-
-        return name;
+        return "Real path for " + logPath + " not found";
     }
 
     @Override
     public Image getIcon(int type) {
-        return ImageUtilities.loadImage("org/netbeans/modules/tools/logwatcher/resources/file.png");
+        return ImageUtilities.loadImage("org/netbeans/modules/tools/logwatcher/resources/broken.png");
     }
 
     @Override
     public Action[] getActions(boolean context) {
-        FileObject file = getLookup().lookup(FileObject.class);
-        return new Action[]{new OpenInSystemAction(file)};
-    }
-
-    private boolean isFilteredOutFromWatch(FileObject nodeFo) {
-        FileObject parent = nodeFo.getParent();
-        return ConfigSupport.logFolderHasFilters(parent)
-                && !ConfigSupport.fileIsMarkedForWatching(nodeFo);
+        List<Action> actions = new ArrayList<>();
+        actions.addAll(Utilities.actionsForPath("Actions/FolderActions"));
+        return actions.toArray(new Action[0]);
     }
 }

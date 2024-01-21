@@ -1,24 +1,22 @@
 package org.netbeans.modules.tools.logwatcher;
 
-import org.netbeans.modules.tools.logwatcher.output.LogIO;
 import java.nio.file.*;
 import static java.nio.file.StandardWatchEventKinds.*;
-import java.nio.file.attribute.*;
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import org.netbeans.api.progress.ProgressHandle;
-
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_DIR_HAS_FILTERS_ATTR;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_FILE_WATCH_ATTR;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.util.Cancellable;
 import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import org.openide.windows.IOContainer;
+import org.netbeans.modules.tools.logwatcher.output.LogIO;
 
 /**
  * https://docs.oracle.com/javase/tutorial/essential/io/examples/WatchDir.java
@@ -31,7 +29,6 @@ public class WatchDir implements ChangeListener {
     private final WatchService watcher;
     private final Map<WatchKey, Path> keys;
     //private final boolean recursive;
-    private boolean trace = false;
     public AtomicBoolean isRunning = new AtomicBoolean(false);
     private static WatchDir instance = null;
     //ProgressHandle ph;
@@ -58,7 +55,7 @@ public class WatchDir implements ChangeListener {
                 }
             });
         }
-        
+
         IOContainer ioContainer = IOContainer.getDefault();
         ioContainer.open();
 
@@ -85,22 +82,23 @@ public class WatchDir implements ChangeListener {
         return (WatchEvent<T>) event;
     }
 
+    public boolean isRegistered(FileObject dirFo) {
+        FileObject nodeFo = LogWatchTree.getFolderFileObject(dirFo.getName());
+        if (nodeFo == null) {
+            return false;
+        }
+        String referencePath = ConfigSupport.getLogFileReferencePath(nodeFo);
+        File referenceFile = new File(referencePath);
+        return keys.containsValue(referenceFile.toPath());
+    }
+
     /**
      * Register the given directory with the WatchService
      */
     private void register(Path dir) throws IOException {
         WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-        if (trace) {
-            Path prev = keys.get(key);
-            if (prev == null) {
-                System.out.format("register: %s\n", dir);
-            } else {
-                if (!dir.equals(prev)) {
-                    System.out.format("update: %s -> %s\n", prev, dir);
-                }
-            }
-        }
         keys.put(key, dir);
+        notifyLogIo(dir, "registered: " + dir.toString());
     }
 
     public void remove(Path dir) {
@@ -112,25 +110,11 @@ public class WatchDir implements ChangeListener {
                 }
             }
         }
-    }
-
-    /**
-     *
-     * @not necessary
-     *
-     * Register the given directory, and all its sub-directories, with the
-     * WatchService.
-     */
-    private void registerAll(final Path start) throws IOException {
-        // register directory and sub-directories
-        Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                    throws IOException {
-                register(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
+        
+        //stop process if we removed all the keys
+        if (keys.isEmpty()) {
+            killProcess();
+        }
     }
 
     /**
@@ -138,21 +122,9 @@ public class WatchDir implements ChangeListener {
      */
     WatchDir(Path dir) throws IOException {
         this.watcher = FileSystems.getDefault().newWatchService();
-        this.keys = new HashMap<WatchKey, Path>();
-//        this.recursive = recursive;
-
-//        if (recursive) {
-//            System.out.format("Scanning %s ...\n", dir);
-//            registerAll(dir);
-//            System.out.println("Done.");
-//        } else {
-        register(dir);
-//        }
-
+        this.keys = new HashMap<>();
         this.output = LogIO.getInstance();
-        //this.atomic = Thread.currentThread();
-        // enable trace after initial registration
-        this.trace = true;
+        register(dir);
         this.isRunning.set(false);
     }
 
@@ -192,6 +164,7 @@ public class WatchDir implements ChangeListener {
                 killProcess();
                 return;
             }
+
             // wait for key to be signalled
             WatchKey key;
             try {
@@ -224,42 +197,31 @@ public class WatchDir implements ChangeListener {
                 // print out event
                 System.out.format("%s: %s\n", event.kind().name(), child);
                 String fileName = child.getFileName().toString();
-                if (fileName.endsWith(".log") || fileName.endsWith(".txt")){
+                if (fileName.endsWith(".log") || fileName.endsWith(".txt")) {
                     try {
                         FileObject rootConfig = LogWatchTree.getRootFileObject();
                         FileObject subFolder = rootConfig.getFileObject(dir.getFileName().toString());
-                        Object filterAttr = subFolder.getAttribute(LOG_DIR_HAS_FILTERS_ATTR);
-                        if (filterAttr != null && (Integer) filterAttr == 1){
+
+                        //Filtered notifications
+                        if (ConfigSupport.logFolderHasFilters(subFolder)) {
                             FileObject fileSearch = subFolder.getFileObject(fileName);
-                            if (fileSearch != null){
-                                Object watch = fileSearch.getAttribute(LOG_FILE_WATCH_ATTR);
-                                if (watch != null && (Integer) watch == 1){
-                                    this.output.notify(child, dir, event.kind().name());
+                            if (fileSearch != null) {
+                                if (ConfigSupport.fileIsMarkedForWatching(fileSearch)) {
+                                    notifyLogIo(child, dir, event.kind().name());
+                                } else {
+                                    notifyLogIo(dir, "filtered out file, skipping update from : " + fileName);
                                 }
                             } else {
                                 //new file
-                                this.output.notify(child, dir, event.kind().name());
+                                notifyLogIo(child, dir, event.kind().name());
                             }
                         } else {
-                            this.output.notify(child, dir, event.kind().name());
+                            notifyLogIo(child, dir, event.kind().name());
                         }
                     } catch (DataObjectNotFoundException ex) {
                         Exceptions.printStackTrace(ex);
                     }
                 }
-                // if directory is created, and watching recursively, then
-                // register it and its sub-directories
-                /*
-                if (recursive && (kind == ENTRY_CREATE)) {
-                    try {
-                        if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
-                            registerAll(child);
-                        }
-                    } catch (IOException x) {
-                        // ignore to keep sample readbale
-                    }
-                }
-                 */
             }
 
             // reset key and remove from set if directory no longer accessible
@@ -272,6 +234,44 @@ public class WatchDir implements ChangeListener {
                     killProcess();
                     break;
                 }
+            }
+        }
+    }
+
+    private void notifyLogIo(Path dir, String message) {
+        Runnable awtTask = new Runnable() {
+            @Override
+            public void run() {
+                output.notify(dir, message);
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            awtTask.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(awtTask);
+            } catch (InterruptedException | InvocationTargetException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        }
+    }
+    
+    private void notifyLogIo(Path filePath, Path dir, String event) {
+        Runnable awtTask = new Runnable() {
+            @Override
+            public void run() {
+                output.notify(filePath, dir, event);
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            awtTask.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(awtTask);
+            } catch (InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            } catch (InvocationTargetException ex) {
+                Exceptions.printStackTrace(ex);
             }
         }
     }

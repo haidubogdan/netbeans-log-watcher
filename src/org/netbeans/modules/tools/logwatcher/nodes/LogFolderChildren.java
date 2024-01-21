@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.swing.Action;
-import org.netbeans.modules.tools.logwatcher.LogNodeSupport;
+import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataObjectNotFoundException;
 import org.openide.nodes.FilterNode;
@@ -27,6 +27,9 @@ public class LogFolderChildren extends FilterNode.Children {
         FileObject fo = n.getLookup().lookup(FileObject.class);
         if (fo != null && fo.isFolder()) {
             try {
+                if (ConfigSupport.referenceIsBroken(fo)){
+                    return new Node[]{new BrokenNode(n)};
+                }
                 return new Node[]{new FolderNode(n, fo)};
             } catch (DataObjectNotFoundException ex) {
                 Exceptions.printStackTrace(ex);

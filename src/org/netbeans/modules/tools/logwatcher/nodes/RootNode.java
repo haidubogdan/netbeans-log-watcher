@@ -72,8 +72,8 @@ public class RootNode extends FilterNode {
         DataFolder fd = getLookup().lookup(DataFolder.class);
         actions.add(new AddFolderAction(fd));
         actions.add(new AddLogFileAction(fd));
-        actions.add(new StopWatchAction(fd));
-        return actions.toArray(new Action[actions.size()]);
+        actions.add(new StopWatchAction(fd.getPrimaryFile()));
+        return actions.toArray(new Action[0]);
     }
 
     public void refreshChildren() {

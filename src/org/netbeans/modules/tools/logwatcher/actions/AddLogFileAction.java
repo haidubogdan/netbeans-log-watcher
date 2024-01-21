@@ -6,17 +6,13 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.AbstractAction;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_FILE_WATCH_ATTR;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
-import org.netbeans.modules.tools.logwatcher.WatchDir;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionRegistration;
+import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataFolder;
 import org.openide.util.Exceptions;
 import org.openide.windows.WindowManager;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_DIR_HAS_FILTERS_ATTR;
+import org.netbeans.modules.tools.logwatcher.WatchDir;
 
 /**
  * for a file we need to use a different service or filter a folder to notify
@@ -54,7 +50,7 @@ public class AddLogFileAction extends AbstractAction implements ActionListener {
                 try {
                     DataFolder parentDf = DataFolder.create(folder, dirParent.getName());
                     fld = parentDf.getPrimaryFile();
-                    fld.setAttribute(LOG_PATH_ATTR, dirParent.getPath());
+                    ConfigSupport.setLogReferencePath(fld, dirParent.getPath());
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                     return;
@@ -66,14 +62,11 @@ public class AddLogFileAction extends AbstractAction implements ActionListener {
                 if (logFileForNode == null) {
                     //add new node
                     logFileForNode = fld.createData(logFile.getName(), logFile.getExt());
-                    int x = 1;
                 }
                 if (logFileForNode != null) {
-                    logFileForNode.setAttribute(LOG_PATH_ATTR, logFile.getPath());
-                    logFileForNode.setAttribute(LOG_FILE_WATCH_ATTR, 1);
-                    if (fld.getAttribute(LOG_DIR_HAS_FILTERS_ATTR) == null){
-                        fld.setAttribute(LOG_DIR_HAS_FILTERS_ATTR, 1);
-                    }
+                    ConfigSupport.setLogReferencePath(logFileForNode, logFile.getPath());
+                    ConfigSupport.markForWatching(logFileForNode, 1);
+                    ConfigSupport.setFilteredStatus(logFileForNode, 1);
                 }
             } catch (IOException ioe) {
                 Exceptions.printStackTrace(ioe);

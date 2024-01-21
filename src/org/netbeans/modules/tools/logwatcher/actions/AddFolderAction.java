@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
-import static org.netbeans.modules.tools.logwatcher.LogWatcherNode.LOG_PATH_ATTR;
+import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionRegistration;
 import org.openide.filesystems.FileObject;
@@ -22,7 +22,7 @@ import org.openide.windows.WindowManager;
 @ActionID(id = "org.netbeans.modules.tools.logwatcher.actions.AddFolderAction", category = "RootActions")
 @ActionRegistration(displayName = "Add Folder")
 public class AddFolderAction extends AbstractAction implements ActionListener {
-
+    public static String FILTER_ICON;
     private final DataFolder folder;
 
     public AddFolderAction(DataFolder df) {
@@ -53,22 +53,7 @@ public class AddFolderAction extends AbstractAction implements ActionListener {
             try {
                 DataFolder fd = DataFolder.create(folder, folderString);
                 FileObject fod = fd.getPrimaryFile();
-                fod.setAttribute(LOG_PATH_ATTR, dirFo.getPath());
-                
-                /*
-                FileObject writeTo = fod.createData(LogNodeSupport.FOLDER_DATA_NAME + folderString);
-                FileLock lock = writeTo.lock();
-                try {
-                    try (ObjectOutputStream str = new ObjectOutputStream(writeTo.getOutputStream(lock))) {
-                        str.writeObject(new LogFolder(dir));
-                        str.close();
-                    }
-                } finally {
-                    lock.releaseLock();
-                }
-                */
-                //LogWatcherPropertiesSupport.getInstance().setFilePath(dir.getName(), dirFo);
-                //WatchDir.watch(dir.toPath());
+                ConfigSupport.setLogReferencePath(fod, dirFo.getPath());
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
             }
