@@ -17,7 +17,8 @@ Installation
 
 ### Manually
 
-First, download the latest NBM package.  
+First, download the latest [NBM](https://github.com/haidubogdan/netbeans-log-watcher/releases/tag/nb-log-watcher-1.0.5) package.
+Or download it from the nbm folder in this repository.
 Then proceed through the menu _Tools > Plugins > Downloaded > Add Plugins..._
 
 ### Apache NetBeans Plugin Portal Update Center
