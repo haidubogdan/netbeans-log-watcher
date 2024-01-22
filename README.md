@@ -55,3 +55,8 @@ Usage
 - Stop watch
 - Clear log output
 - Open folders and file in the host filesystem
+
+### Known issues
+
+- The add folder takes some time. This is a issue with the swing **JFileChooser** library
+- Jtree not working properly on older netbeans versions < 18
