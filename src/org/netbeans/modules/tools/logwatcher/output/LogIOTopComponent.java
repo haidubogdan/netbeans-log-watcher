@@ -117,8 +117,8 @@ public final class LogIOTopComponent extends TopComponent {
         FileObject nodeFolder = LogWatchTree.getFolderFileObject(watchFolder.getName());
         if (nodeFolder != null) {
             actions.add(new WatchAction(nodeFolder));
-            actions.add(new StopWatchAction(nodeFolder));
             actions.add(new ClearLogIOAction(nodeFolder));
+            actions.add(new StopWatchAction(nodeFolder));
             actions.add(new FilterFilesListAction(nodeFolder));
         }
         io = IOProvider.getDefault().getIO(getName(), actions.toArray(new Action[0]), container);

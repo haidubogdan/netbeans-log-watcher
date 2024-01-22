@@ -105,7 +105,7 @@ public class LogIO {
                 lines++;
                 if (lines > lastParsedLine) {
                     logReadAdded = true;
-                    sentence.add(lines + " : " + changedLine + "\n");
+                    sentence.add(lines + " : " + changedLine);
                     lastParsedLine = lines;
                 }
             }
@@ -114,7 +114,7 @@ public class LogIO {
                 DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 io.getOut().println(dateFormat.format(new Date()) + " | " + file + " last line : " + lastFileReadLine + " | " + event);
                 for (String line : sentence){
-                    if (line.toLowerCase().contains("exception")){
+                    if (line.toLowerCase().contains(" exception ")){
                         io.getErr().println(line);
                     } else {
                         io.getOut().println(line);
