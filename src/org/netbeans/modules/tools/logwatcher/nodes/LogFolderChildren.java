@@ -1,10 +1,7 @@
 package org.netbeans.modules.tools.logwatcher.nodes;
 
-import java.awt.Image;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.swing.Action;
 import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataObjectNotFoundException;
@@ -42,9 +39,9 @@ public class LogFolderChildren extends FilterNode.Children {
     }
 
     public void refreshNodes() {
-        Node[] nodes = original.getChildren().getNodes();
+        Node[] existingNodes = original.getChildren().getNodes();
         List<Node> empty = Collections.emptyList();
         setKeys(empty);
-        setKeys(nodes);
+        setKeys(existingNodes);
     }
 }

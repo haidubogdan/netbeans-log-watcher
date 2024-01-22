@@ -3,5 +3,5 @@ AutoUpdate-Show-In-Client: true
 OpenIDE-Module: org.netbeans.modules.tools.logwatcher
 OpenIDE-Module-Layer: org/netbeans/modules/tools/logwatcher/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/netbeans/modules/tools/logwatcher/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0.4
+OpenIDE-Module-Specification-Version: 1.0.5
 

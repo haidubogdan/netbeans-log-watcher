@@ -6,13 +6,14 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.AbstractAction;
-import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataFolder;
 import org.openide.util.Exceptions;
 import org.openide.windows.WindowManager;
-import org.netbeans.modules.tools.logwatcher.WatchDir;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionRegistration;
+import org.netbeans.modules.tools.logwatcher.ConfigSupport;
 
 /**
  * for a file we need to use a different service or filter a folder to notify
@@ -20,8 +21,8 @@ import org.netbeans.modules.tools.logwatcher.WatchDir;
  *
  * @author bhaidu
  */
-//@ActionID(category = "RootActions", id = "org.netbeans.modules.tools.logwatcher.actions.AddLogFileAction")
-//@ActionRegistration(displayName = "Add Log File")
+@ActionID(category = "RootActions", id = "org.netbeans.modules.tools.logwatcher.actions.AddLogFileAction")
+@ActionRegistration(displayName = "Add Log File")
 public class AddLogFileAction extends AbstractAction implements ActionListener {
 
     private final DataFolder folder;
@@ -48,6 +49,7 @@ public class AddLogFileAction extends AbstractAction implements ActionListener {
 
             if (!fld.getName().equals(dirParent.getName())) {
                 try {
+                    //new folder
                     DataFolder parentDf = DataFolder.create(folder, dirParent.getName());
                     fld = parentDf.getPrimaryFile();
                     ConfigSupport.setLogReferencePath(fld, dirParent.getPath());
@@ -66,16 +68,12 @@ public class AddLogFileAction extends AbstractAction implements ActionListener {
                 if (logFileForNode != null) {
                     ConfigSupport.setLogReferencePath(logFileForNode, logFile.getPath());
                     ConfigSupport.markForWatching(logFileForNode, 1);
-                    ConfigSupport.setFilteredStatus(logFileForNode, 1);
+                    if (ConfigSupport.logFolderHasFilters(fld)) {
+                        ConfigSupport.setFilteredStatus(logFileForNode, 1);
+                    }
                 }
             } catch (IOException ioe) {
                 Exceptions.printStackTrace(ioe);
-                return;
-            }
-            try {
-                WatchDir.watch(dir.toPath());
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
             }
         }
     }

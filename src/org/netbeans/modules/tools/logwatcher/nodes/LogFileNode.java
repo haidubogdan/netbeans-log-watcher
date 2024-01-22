@@ -48,7 +48,7 @@ public class LogFileNode extends FilterNode {
         String name = nodeFo.getNameExt();
 
         if (isFilteredOutFromWatch(nodeFo)) {
-            name += " <font color='AAAAAA'><i>(skipped from watch)</i></font>";
+            return "<font color='AAAAAA'>" + name + "<i>(skipped from watch)</i></font>";
         }
 
         return name;

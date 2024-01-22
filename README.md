@@ -1,13 +1,10 @@
 NetBeans Log Watcher
 =======================
 
-This module provides a tool to monitor log changes in the Output tab
+This module provides a tool to monitor log changes in the Output tab.
+This acts similar like a linux `tail -f` done in a log folder.
 
-Status
-------
-
-[![GitHub license][license-badge]][license-link]
-[![GitHub release][release-badge]][release-latest]
+![Image](resources/log_output.png)
 
 Compatibility
 -------------
@@ -29,3 +26,32 @@ Go to _Tools > Plugins > Available Plugins_, check _NetBeans Case Converter_ in 
 
 Usage
 -----
+
+### Add a folder
+
+1. Open the Services window (Window > Services)
+2. Click on the Log Watcher icon
+3. Right click -> Click on Add folder
+4. Select a folder and click OK
+
+![Image](resources/menu_preview.png)
+
+### Add a file
+
+1. Open the Services window (Window > Services)
+2. Click on the Log Watcher icon
+3. Right click -> Click on Add a log file
+4. Select a the file and click OK
+
+### Start watching
+
+- Right click on a folder and select `Watch`
+
+### Features
+
+- Filter files to watch for changes
+- Mark folders which don't exist anymore as broken
+- Colored output for lines which contain exception
+- Stop watch
+- Clear log output
+- Open folders and file in the host filesystem
